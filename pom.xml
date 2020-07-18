@@ -46,19 +46,19 @@
     <system>Github</system>
   </issueManagement>
 
-  <distributionManagement>
-    <repository>
-      <id>repo.eclipse.org</id>
-      <name>ECF Maven Repository - Releases</name>
-      <url>https://repo.eclipse.org/content/repositories/ecf-releases/</url>
-    </repository>
-    <snapshotRepository>
-      <id>repo.eclipse.org</id>
-      <name>ECF Maven Repository - Snapshots</name>
-      <url>https://repo.eclipse.org/content/repositories/ecf-snapshots/</url>
-      <uniqueVersion>true</uniqueVersion>
-    </snapshotRepository>
-  </distributionManagement>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>maven-snapshots</id>
+			<name>Nexus Snapshots</name>
+			<url>http://nexus.ad.darklight.ai:8081/repository/maven-snapshots/</url>
+		</snapshotRepository>
+		<repository>
+			<id>maven-releases</id>
+			<name>Nexus Releases</name>
+			<url>http://nexus.ad.darklight.ai:8081/repository/maven-releases/</url>
+		</repository>
+	</distributionManagement>
 
   <properties>
     <tycho-version>1.0.0</tycho-version>
