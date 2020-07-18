@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.8"?>
+<target name="Etcd Provider 2020-06 Target" sequenceNumber="33">
+<locations>
+<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.license.feature.group" version="1.0.1.v20140414-1359"/>
+<repository location="http://download.eclipse.org/cbi/updates/license/1.0.1.v20140414-1359"/>
+</location>
+	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+		<repository location="http://download.eclipse.org/releases/2020-06"/>
+		<unit id="org.eclipse.pde.feature.group" version="3.14.400.v20200604-0540"/>
+		<unit id="org.eclipse.platform.feature.group" version="4.16.0.v20200604-0951"/>
+	</location>
+	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+		<repository location="https://download.eclipse.org/rt/ecf/3.14.9/site.p2"/>
+		<unit id="com.sun.syndication" version="0.9.0.v200803061811"/>
+		<unit id="javax.servlet" version="3.1.0.v201410161800"/>
+		<unit id="org.apache.hadoop.zookeeper" version="3.3.3.v201105210832"/>
+		<unit id="org.apache.httpcomponents.httpclient" version="4.5.10.v20200114-1512"/>
+		<unit id="org.apache.httpcomponents.httpcore" version="4.4.12.v20200108-1212"/>
+		<unit id="org.apache.log4j" version="1.2.15.v201012070815"/>
+		<unit id="org.eclipse.ecf.core.feature.group" version="3.14.8.v20200611-2221"/>
+		<unit id="org.eclipse.ecf.core.source.feature.group" version="3.14.8.v20200611-2221"/>
+		<unit id="org.eclipse.ecf.remoteservice.sdk.examples.feature.feature.group" version="1.0.200.v20200611-1508"/>
+		<unit id="org.eclipse.ecf.remoteservice.sdk.examples.feature.source.feature.group" version="1.0.200.v20200611-1508"/>
+		<unit id="org.eclipse.ecf.remoteservice.sdk.feature.feature.group" version="3.14.8.v20200611-2221"/>
+		<unit id="org.eclipse.ecf.remoteservice.sdk.feature.source.feature.group" version="3.14.8.v20200611-2221"/>
+		<unit id="org.jdom" version="1.1.1.v201101151400"/>
+		<unit id="org.json" version="1.0.0.v201011060100"/>
+		<unit id="org.objectweb.asm" version="7.2.0.v20191010-1910"/>
+		<unit id="org.xbill.dns" version="2.0.8.v201112050911"/>
+		<unit id="org.eclipse.ecf.discovery.dnssd.feature.feature.group" version="1.0.100.v20200611-1836"/>
+		<unit id="org.eclipse.ecf.discovery.dnssd.feature.source.feature.group" version="1.0.100.v20200611-1836"/>
+		<unit id="org.eclipse.ecf.discovery.slp.feature.feature.group" version="1.0.100.v20200611-1900"/>
+		<unit id="org.eclipse.ecf.discovery.slp.feature.source.feature.group" version="1.0.100.v20200611-1900"/>
+		<unit id="org.eclipse.ecf.discovery.zookeeper.feature.feature.group" version="1.0.200.v20200611-1836"/>
+		<unit id="org.eclipse.ecf.discovery.zookeeper.feature.source.feature.group" version="1.0.200.v20200611-1836"/>
+		<unit id="org.eclipse.ecf.provider.generic.datashare.feature.feature.group" version="1.0.200.v20200611-1836"/>
+		<unit id="org.eclipse.ecf.provider.generic.datashare.feature.source.feature.group" version="1.0.200.v20200611-1836"/>
+	</location>
+</locations>
+</target>
