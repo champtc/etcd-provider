@@ -24,7 +24,7 @@ import org.eclipse.ecf.tests.discovery.Activator;
 public class DiscoveryTest extends AbstractDiscoveryTest {
 
 	public static final String TEST_HOST = System.getProperty(
-			"etcd.test.hostname", "composent.com");
+			"etcd.test.hostname", "localhost");
 	public static final String TEST_PORT = System.getProperty("etcd.test.port",
 			"2379");
 	public static final String TEST_URL_BASE = System.getProperty(
