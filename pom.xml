@@ -61,14 +61,14 @@
 	</distributionManagement>
 
   <properties>
-    <tycho-version>1.0.0</tycho-version>
+    <tycho-version>1.7.0</tycho-version>
     <cbi-version>1.1.3</cbi-version>
     <target-platform>photon</target-platform>
     <project.build.sourceEncoding>ISO-8859-1</project.build.sourceEncoding>
     <project.resources.sourceEncoding>ISO-8859-1</project.resources.sourceEncoding>
     <tycho.scmUrl>${project.scm.connection}</tycho.scmUrl>
     <!-- Skip tests by default because they take a long time -->
-    <skipTests>true</skipTests>
+    <skipTests>false</skipTests>
   </properties>
 
   <pluginRepositories>
@@ -110,17 +110,7 @@
             <environment>
               <os>win32</os>
               <ws>win32</ws>
-              <arch>x86</arch>
-            </environment>
-            <environment>
-              <os>win32</os>
-              <ws>win32</ws>
               <arch>x86_64</arch>
-            </environment>
-            <environment>
-              <os>linux</os>
-              <ws>gtk</ws>
-              <arch>x86</arch>
             </environment>
             <environment>
               <os>linux</os>
@@ -170,6 +160,38 @@
     </plugins>
     <pluginManagement>
       <plugins>
+			<!--This plugin's configuration is used to store Eclipse m2e settings 
+			only. It has no influence on the Maven build itself. -->
+			<plugin>
+				<groupId>org.eclipse.m2e</groupId>
+				<artifactId>lifecycle-mapping</artifactId>
+				<version>1.0.0</version>
+				<configuration>
+					<lifecycleMappingMetadata>
+						<pluginExecutions>
+							<pluginExecution>
+								<pluginExecutionFilter>
+									<groupId>
+										org.eclipse.tycho
+									</groupId>
+									<artifactId>
+										tycho-compiler-plugin
+									</artifactId>
+									<versionRange>
+										[0.22.0,)
+									</versionRange>
+									<goals>
+										<goal>compile</goal>
+									</goals>
+								</pluginExecutionFilter>
+								<action>
+									<ignore></ignore>
+								</action>
+							</pluginExecution>
+						</pluginExecutions>
+					</lifecycleMappingMetadata>
+				</configuration>
+			</plugin>
         <plugin>
           <groupId>org.eclipse.tycho</groupId>
           <artifactId>tycho-compiler-plugin</artifactId>
