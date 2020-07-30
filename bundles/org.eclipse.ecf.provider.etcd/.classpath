@@ -1,7 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry exported="true" kind="lib" path="lib/guava-27.0-jre.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/perfmark-api-0.19.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/grpc-context-1.30.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/grpc-protobuf-lite-1.30.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/slf4j-api-1.7.30.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/netty-all-4.1.51.Final.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/grpc-api-1.30.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/grpc-all-1.30.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/grpc-grpclb-1.30.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/grpc-netty-1.30.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/grpc-protobuf-1.30.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/grpc-stub-1.30.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/grpc-core-1.30.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/failsafe-2.4.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jetcd-core-0.5.3.jar" sourcepath="lib/jetcd-core-0.5.3-sources.jar"/>
+	<classpathentry kind="lib" path="lib/protobuf-java-3.12.2.jar" sourcepath="lib/protobuf-java-3.12.2-sources.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry kind="src" path="src/"/>
+	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

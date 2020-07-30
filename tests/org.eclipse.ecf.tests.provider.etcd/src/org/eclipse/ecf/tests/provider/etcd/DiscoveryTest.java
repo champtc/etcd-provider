@@ -1,7 +1,9 @@
 package org.eclipse.ecf.tests.provider.etcd;
 
+import java.sql.ClientInfoStatus;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.ecf.discovery.IDiscoveryAdvertiser;
 import org.eclipse.ecf.discovery.IDiscoveryLocator;
@@ -19,6 +21,11 @@ import org.eclipse.ecf.provider.etcd.EtcdServiceInfo;
 import org.eclipse.ecf.provider.etcd.identity.EtcdNamespace;
 import org.eclipse.ecf.tests.discovery.AbstractDiscoveryTest;
 import org.eclipse.ecf.tests.discovery.Activator;
+
+import io.etcd.jetcd.ByteSequence;
+import io.etcd.jetcd.Client;
+import io.etcd.jetcd.KV;
+import io.etcd.jetcd.kv.GetResponse;
 
 @SuppressWarnings("restriction")
 public class DiscoveryTest extends AbstractDiscoveryTest {
@@ -135,12 +142,29 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 	
 
 	public void testGetRequestSucceed() throws Exception {
-		System.out.println("testGetRequestSucceed(" + GET_SUCCEED + ")");
-		EtcdResponse response = new EtcdGetRequest(GET_SUCCEED, false)
-				.execute();
-		assertFalse(response.isError());
-		System.out.println("testGetRequestSucceed(response="
-				+ response.getSuccessResponse() + ")");
+		Client client = Client.builder().endpoints("http://localhost:2379").build();
+		KV kvClient = client.getKVClient();
+		
+		ByteSequence key = ByteSequence.from("Test_key".getBytes());
+		ByteSequence value = ByteSequence.from("Test_value".getBytes());
+		
+		kvClient.put(key, value).get();
+		CompletableFuture<GetResponse> getFuture = kvClient.get(key);
+		
+		GetResponse response = getFuture.get();
+		
+		kvClient.delete(key).get();
+		
+
+		
+		
+		
+//		System.out.println("testGetRequestSucceed(" + GET_SUCCEED + ")");
+//		EtcdResponse response = new EtcdGetRequest(GET_SUCCEED, false)
+//				.execute();
+//		assertFalse(response.isError());
+//		System.out.println("testGetRequestSucceed(response="
+//				+ response.getSuccessResponse() + ")");
 	}
 
 	public void testGetRequestSucceedRecursive() throws Exception {
