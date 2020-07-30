@@ -4,13 +4,19 @@ Bundle-Name: Etcd Provider Tests
 Bundle-SymbolicName: org.eclipse.ecf.tests.provider.etcd
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: Eclipse.org - ECF
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Require-Bundle: org.eclipse.ecf.tests.discovery;bundle-version="2.0.0",
  org.eclipse.equinox.common;bundle-version="3.6.200",
  org.eclipse.ecf.discovery;bundle-version="5.0.0",
- org.eclipse.ecf.provider.etcd;bundle-version="1.0.0",
  org.junit;bundle-version="4.11.0",
  org.json;bundle-version="1.0.0",
  org.eclipse.ecf;bundle-version="3.4.0"
 Bundle-ActivationPolicy: lazy
-Import-Package: com.google.protobuf
+Import-Package: com.google.protobuf,
+ io.etcd.jetcd,
+ io.etcd.jetcd.kv,
+ org.eclipse.ecf.internal.provider.etcd,
+ org.eclipse.ecf.internal.provider.etcd.protocol,
+ org.eclipse.ecf.provider.etcd,
+ org.eclipse.ecf.provider.etcd.identity
+Automatic-Module-Name: org.eclipse.ecf.tests.provider.etcd

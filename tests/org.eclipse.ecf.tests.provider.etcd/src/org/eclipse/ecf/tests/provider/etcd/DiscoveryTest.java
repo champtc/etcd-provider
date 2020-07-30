@@ -1,6 +1,5 @@
 package org.eclipse.ecf.tests.provider.etcd;
 
-import java.sql.ClientInfoStatus;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.concurrent.CompletableFuture;
@@ -27,7 +26,6 @@ import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KV;
 import io.etcd.jetcd.kv.GetResponse;
 
-@SuppressWarnings("restriction")
 public class DiscoveryTest extends AbstractDiscoveryTest {
 
 	public static final String TEST_HOST = System.getProperty(

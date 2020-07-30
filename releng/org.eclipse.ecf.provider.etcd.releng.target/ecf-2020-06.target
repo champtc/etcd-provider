@@ -38,5 +38,22 @@
 		<unit id="org.eclipse.ecf.provider.generic.datashare.feature.feature.group" version="1.0.200.v20200611-1836"/>
 		<unit id="org.eclipse.ecf.provider.generic.datashare.feature.source.feature.group" version="1.0.200.v20200611-1836"/>
 	</location>
+	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+		<repository location="https://download.eclipse.org/tools/orbit/downloads/drops/R20200529191137/repository/"/>
+		<unit id="com.google.guava" version="27.1.0.v20190517-1946"/>
+		<unit id="com.google.guava.source" version="27.1.0.v20190517-1946"/>
+		<unit id="com.google.inject.assistedinject" version="3.0.0.v201402270930"/>
+		<unit id="com.google.inject.assistedinject.source" version="3.0.0.v201402270930"/>
+		<unit id="com.google.inject.multibindings" version="3.0.0.v201605172100"/>
+		<unit id="com.google.inject.multibindings.source" version="3.0.0.v201605172100"/>
+		<unit id="org.slf4j.api" version="1.7.30.v20200204-2150"/>
+		<unit id="org.slf4j.api.source" version="1.7.30.v20200204-2150"/>
+		<unit id="org.slf4j.apis.jcl" version="1.7.30.v20200204-2150"/>
+		<unit id="org.slf4j.apis.jcl.source" version="1.7.30.v20200204-2150"/>
+		<unit id="org.slf4j.apis.log4j" version="1.7.30.v20200204-2150"/>
+		<unit id="org.slf4j.apis.log4j.source" version="1.7.30.v20200204-2150"/>
+		<unit id="org.slf4j.binding.nop" version="1.7.30.v20200204-2150"/>
+		<unit id="org.slf4j.binding.nop.source" version="1.7.30.v20200204-2150"/>
+	</location>
 </locations>
 </target>
