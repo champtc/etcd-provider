@@ -1,8 +1,14 @@
 package org.eclipse.ecf.tests.provider.etcd;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+
+import java.nio.charset.Charset;
 
 import org.eclipse.ecf.discovery.IDiscoveryAdvertiser;
 import org.eclipse.ecf.discovery.IDiscoveryLocator;
@@ -24,9 +30,17 @@ import org.eclipse.ecf.tests.discovery.Activator;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KV;
+import io.etcd.jetcd.KeyValue;
 import io.etcd.jetcd.kv.GetResponse;
+import io.etcd.jetcd.kv.PutResponse;
+import io.etcd.jetcd.options.GetOption;
+
 
 public class DiscoveryTest extends AbstractDiscoveryTest {
+	
+	public static final Client client = Client.builder().endpoints("http://localhost:2379").build();
+	
+	public static final KV kvClient = client.getKVClient();
 
 	public static final String TEST_HOST = System.getProperty(
 			"etcd.test.hostname", "localhost");
@@ -73,25 +87,32 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 	}
 
 	protected void deleteAll() throws Exception {
-		EtcdResponse response = new EtcdGetRequest(TEST_URL_BASE, true)
-				.execute();
-		assertFalse(response.isError());
-		EtcdSuccessResponse r = response.getSuccessResponse();
-		EtcdNode node = r.getNode();
-		assertNotNull(node);
-		for (EtcdNode n : node.getNodes()) {
-			System.out.println("deleting node with key=" + n.getKey()
-					+ ", isDir=" + n.isDirectory() + ", value=" + n.getValue());
-			EtcdResponse resp = null;
-			if (n.isDirectory()) {
-				resp = new EtcdDeleteRequest(TEST_URL_BASE + n.getKey(), true)
-						.execute();
-			} else {
-				resp = new EtcdDeleteRequest(TEST_URL_BASE + n.getKey())
-						.execute();
-			}
-			assertNotNull(resp);
-		}
+		ByteSequence key = ByteSequence.from("\0".getBytes());
+		GetOption option = GetOption.newBuilder().withRange(key).build();
+		GetResponse response = kvClient.get(key,option).get();
+		for (KeyValue kv : response.getKvs()) {
+		        kvClient.delete(kv.getKey());
+		}		
+		
+//		EtcdResponse response = new EtcdGetRequest(TEST_URL_BASE, true)
+//				.execute();
+//		assertFalse(response.isError());
+//		EtcdSuccessResponse r = response.getSuccessResponse();
+//		EtcdNode node = r.getNode();
+//		assertNotNull(node);
+//		for (EtcdNode n : node.getNodes()) {
+//			System.out.println("deleting node with key=" + n.getKey()
+//					+ ", isDir=" + n.isDirectory() + ", value=" + n.getValue());
+//			EtcdResponse resp = null;
+//			if (n.isDirectory()) {
+//				resp = new EtcdDeleteRequest(TEST_URL_BASE + n.getKey(), true)
+//						.execute();
+//			} else {
+//				resp = new EtcdDeleteRequest(TEST_URL_BASE + n.getKey())
+//						.execute();
+//			}
+//			assertNotNull(resp);
+//		}
 	}
 
 	public void testAdvertiseServiceInfo() throws Exception {
@@ -140,22 +161,14 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 	
 
 	public void testGetRequestSucceed() throws Exception {
-		Client client = Client.builder().endpoints("http://localhost:2379").build();
-		KV kvClient = client.getKVClient();
-		
-		ByteSequence key = ByteSequence.from("Test_key".getBytes());
-		ByteSequence value = ByteSequence.from("Test_value".getBytes());
-		
-		kvClient.put(key, value).get();
-		CompletableFuture<GetResponse> getFuture = kvClient.get(key);
-		
-		GetResponse response = getFuture.get();
-		
-		kvClient.delete(key).get();
-		
-
+		ByteSequence key = ByteSequence.from("foo".getBytes());
+		GetResponse getResponse = kvClient.get(key).get();
+		assertTrue(!getResponse.getKvs().isEmpty());
+	}
 		
 		
+//		ByteSequence value = ByteSequence.from("First value".getBytes());
+//		
 		
 //		System.out.println("testGetRequestSucceed(" + GET_SUCCEED + ")");
 //		EtcdResponse response = new EtcdGetRequest(GET_SUCCEED, false)
@@ -163,40 +176,103 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 //		assertFalse(response.isError());
 //		System.out.println("testGetRequestSucceed(response="
 //				+ response.getSuccessResponse() + ")");
-	}
+		
+		
+		
+		//This chunk will get every kv pair in etcd and store it in a hashMap
+//		ByteSequence key = ByteSequence.from(" ".getBytes());
+//
+//		GetOption option = GetOption.newBuilder()
+//		    .withSortField(GetOption.SortTarget.KEY)
+//		    .withSortOrder(GetOption.SortOrder.DESCEND)
+//		    .withRange(key)
+//		    .build();
+//
+//		CompletableFuture<GetResponse> futureResponse = kvClient.get(key, option);
+//
+//		GetResponse response = futureResponse.get();
+//		Map<String, String> keyValueMap = new HashMap<>();
+//
+//		for (KeyValue kv : response.getKvs()) {
+//		    keyValueMap.put(
+//		        kv.getKey().toString(Charset.forName("UTF-8")),
+//		        kv.getValue().toString(Charset.forName("UTF-8"))
+//		    );
+//		}
+//		
+//		keyValueMap.clear();
+		
+		
+//		for (int i = 0; i < 20; i++) {
+//			String k = "key" + Integer.toString(i);
+//			String v = "value" + Integer.toString(i);
+//			key = ByteSequence.from(k.getBytes());
+//			value = ByteSequence.from(v.getBytes());
+//
+//			kvClient.put(key, value).get(); //get() waits until the task is completed and returns the result (completableFuture)
+//			
+//			CompletableFuture<GetResponse> getFuture = kvClient.get(key);
+//			GetResponse response = getFuture.get();
+//			
+//			response = getFuture.get();
+//		}
 
-	public void testGetRequestSucceedRecursive() throws Exception {
-		System.out.println("testGetRequestSucceedRecursive(" + GET_SUCCEED
-				+ ")");
-		EtcdResponse response = new EtcdGetRequest(GET_SUCCEED, true).execute();
-		assertFalse(response.isError());
-		System.out.println("testGetRequestSucceedRecursive(response="
-				+ response.getSuccessResponse() + ")");
-	}
+		//value = ByteSequence.from("New value".getBytes());
+		//kvClient.put(key, value).get();
+		
+		
+		//kvClient.delete(key).get();
 
+
+	
+//// 	ETCDv3 API has a flat key space so there is no recursive requests. Need to replace with a range request?
+//	public void testGetRequestSucceedRecursive() throws Exception {
+//		System.out.println("testGetRequestSucceedRecursive(" + GET_SUCCEED
+//				+ ")");
+//		EtcdResponse response = new EtcdGetRequest(GET_SUCCEED, true).execute();
+//		assertFalse(response.isError());
+//		System.out.println("testGetRequestSucceedRecursive(response="
+//				+ response.getSuccessResponse() + ")");
+//	}
+
+	
+	//This really isn't an error, it just doesn't return anything useful...
 	public void testGetRequestError() throws Exception {
-		EtcdGetRequest request = new EtcdGetRequest(GET_FAIL);
-		EtcdResponse response = request.execute();
-		assertTrue(response.isError());
+		ByteSequence key = ByteSequence.from(Long.toString(System.currentTimeMillis()).getBytes());
+		CompletableFuture<GetResponse> getFuture = kvClient.get(key);
+		GetResponse response = getFuture.get();
+		assertTrue(response.getKvs().isEmpty());
+		
+//		EtcdGetRequest request = new EtcdGetRequest(GET_FAIL);
+//		EtcdResponse response = request.execute();
+//		assertTrue(response.isError());
 	}
 
+	
+	//A put request is always successful
 	public void testCreateSucceed() throws Exception {
-		System.out.println("testCreateSucceed(" + SET_SUCCEED + ")");
-		EtcdResponse response = new EtcdSetRequest(SET_SUCCEED,
-				"hello this is new value").execute();
-		assertFalse(response.isError());
-		System.out.println("testCreateSucceed(response="
-				+ response.getSuccessResponse() + ")");
+		ByteSequence key = ByteSequence.from("foo".getBytes());
+		ByteSequence value = ByteSequence.from("bar".getBytes());
+		PutResponse putResponse = kvClient.put(key, value).get();
+		assertTrue(putResponse != null);
+		
+//		System.out.println("testCreateSucceed(" + SET_SUCCEED + ")");
+//		EtcdResponse response = new EtcdSetRequest(SET_SUCCEED,
+//				"hello this is new value").execute();
+//		assertFalse(response.isError());
+//		System.out.println("testCreateSucceed(response="
+//				+ response.getSuccessResponse() + ")");
 	}
 
-	public void testCreateDirSucceed() throws Exception {
-		System.out.println("testCreateDirSucceed(" + SETDIR_SUCCEED + ")");
-		EtcdResponse response = new EtcdSetRequest(SETDIR_SUCCEED
-				+ String.valueOf(System.currentTimeMillis())).execute();
-		assertFalse(response.isError());
-		System.out.println("testCreateDirSucceed(response="
-				+ response.getSuccessResponse() + ")");
-	}
+//		ETCDv3 API has a flat key space so directories are not used anymore
+//	public void testCreateDirSucceed() throws Exception {
+//		System.out.println("testCreateDirSucceed(" + SETDIR_SUCCEED + ")");
+//		EtcdResponse response = new EtcdSetRequest(SETDIR_SUCCEED
+//				+ String.valueOf(System.currentTimeMillis())).execute();
+//		assertFalse(response.isError());
+//		System.out.println("testCreateDirSucceed(response="
+//				+ response.getSuccessResponse() + ")");
+//	}
 
 	public void testSerializeAndDeserializeServiceInfo() throws Exception {
 

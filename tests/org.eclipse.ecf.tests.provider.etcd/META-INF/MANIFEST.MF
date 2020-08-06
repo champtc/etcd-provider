@@ -15,6 +15,7 @@ Bundle-ActivationPolicy: lazy
 Import-Package: com.google.protobuf,
  io.etcd.jetcd,
  io.etcd.jetcd.kv,
+ io.etcd.jetcd.options,
  org.eclipse.ecf.internal.provider.etcd,
  org.eclipse.ecf.internal.provider.etcd.protocol,
  org.eclipse.ecf.provider.etcd,
