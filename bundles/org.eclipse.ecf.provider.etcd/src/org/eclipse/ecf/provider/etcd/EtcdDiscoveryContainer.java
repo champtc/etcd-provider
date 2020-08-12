@@ -139,6 +139,8 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 		EtcdServiceInfo si = (serviceInfo instanceof EtcdServiceInfo) ? (EtcdServiceInfo) serviceInfo
 				: new EtcdServiceInfo(serviceInfo, ttl);
 		String endpointid = serviceInfo.getServiceProperties().getPropertyString("endpoint.id"); //$NON-NLS-1$
+		
+		//TODO REMOVE This is the key I want I think
 		EtcdServiceInfoKey siKey = (endpointid == null) ? new EtcdServiceInfoKey()
 				: new EtcdServiceInfoKey(this.localSessionId, endpointid);
 		int etcdTTL = convertLongTTLToIntTTL(si.getTTL());
@@ -148,6 +150,8 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 		} catch (JSONException e) {
 			throw new IllegalArgumentException("Exception serializing serviceInfo=" + si, e); //$NON-NLS-1$
 		}
+		
+		//TODO REMOVE full key is the entire url for a v2 request
 		String fullKey = createFullKey(siKey);
 		synchronized (services) {
 			startWatchJob();
