@@ -15,6 +15,7 @@ import org.eclipse.ecf.discovery.IDiscoveryLocator;
 import org.eclipse.ecf.discovery.IServiceInfo;
 import org.eclipse.ecf.discovery.IServiceProperties;
 import org.eclipse.ecf.discovery.identity.IServiceID;
+import org.eclipse.ecf.internal.provider.etcd.protocol.Etcd;
 import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdDeleteRequest;
 import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdGetRequest;
 import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdNode;
@@ -161,9 +162,14 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 	
 
 	public void testGetRequestSucceed() throws Exception {
-		ByteSequence key = ByteSequence.from("foo".getBytes());
-		GetResponse getResponse = kvClient.get(key).get();
-		assertTrue(!getResponse.getKvs().isEmpty());
+//		ByteSequence key = ByteSequence.from("foo".getBytes());
+//		GetResponse getResponse = kvClient.get(key).get();
+//		List<KeyValue> kvs = getResponse.getKvs();
+//		assertTrue(!getResponse.getKvs().isEmpty());
+		
+		Etcd etcd = new Etcd("http://localhost:2379");
+		Map<String, String> map = etcd.get("/foo", "\0");
+		map.clear();
 	}
 		
 		
@@ -251,7 +257,7 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 	
 	//A put request is always successful
 	public void testCreateSucceed() throws Exception {
-		ByteSequence key = ByteSequence.from("foo".getBytes());
+		ByteSequence key = ByteSequence.from("/foo".getBytes());
 		ByteSequence value = ByteSequence.from("bar".getBytes());
 		PutResponse putResponse = kvClient.put(key, value).get();
 		assertTrue(putResponse != null);
