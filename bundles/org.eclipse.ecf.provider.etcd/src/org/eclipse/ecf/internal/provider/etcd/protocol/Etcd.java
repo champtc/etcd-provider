@@ -76,10 +76,24 @@ public class Etcd {
 	}
 	
 	
-	
-	//TODO
-	public void delete(String begin, String end) {
-		
+	public void delete(String key) throws InterruptedException, ExecutionException {
+		delete(key,key);
+	}
+
+	public void delete(String begin, String end) throws InterruptedException, ExecutionException {
+		GetResponse getResponse;
+		ByteSequence key = ByteSequence.from(begin.getBytes());
+		if(begin == end) {
+			getResponse = kvClient.get(key).get();
+		} 
+		else {
+			ByteSequence endRange = ByteSequence.from(end.getBytes());
+			GetOption option = GetOption.newBuilder().withRange(endRange).build();
+			getResponse = kvClient.get(key,option).get();
+		}
+		for (KeyValue kv : getResponse.getKvs()) {
+		        kvClient.delete(kv.getKey());
+		}
 	}
 	
 	//TODO
