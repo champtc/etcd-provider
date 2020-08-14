@@ -167,8 +167,8 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 //		List<KeyValue> kvs = getResponse.getKvs();
 //		assertTrue(!getResponse.getKvs().isEmpty());
 		
-		Etcd etcd = new Etcd("http://localhost:2379");
-		Map<String, String> map = etcd.get("/foo", "\0");
+		Etcd etcd = new Etcd("http://localhost:2379/");
+		Map<String, String> map = etcd.get("\0", true);
 		map.clear();
 	}
 		

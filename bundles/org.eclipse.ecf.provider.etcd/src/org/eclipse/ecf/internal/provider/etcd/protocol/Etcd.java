@@ -37,33 +37,27 @@ public class Etcd {
 	 * 
 	 */
 	public Map<String, String> get(String key) throws InterruptedException, ExecutionException {
-		return get(key, key);
+		return get(key, false);
 	}
 	
 	/**
-     * Returns a map containing all keys from
-     * <i>beginRange</i> to <i>endRange</i> (exclusive).
+     * Returns a map containing all key value pairs of keys
+     * with the prefix <i> key </i> if <i> isRange </i> is true.
+     * Otherwise returns the key value pair associated with <i> key </i>
      *
-     * <p>
-     * If end key is '\0', the range is all keys >= key.
-     *
-     * <p>
-     * If both key and end key are '\0', it returns all keys.
-     *
-     * @param  beginRange Beginning key
-     * @param  endRange End key
+     * @param  key Key to get
+     * @param  isRange Treat <i> key </i> as the prefix for a range request or not 
      * @return  Map of key value pairs
      */
-	public Map<String, String> get(String beginRange, String endRange) throws InterruptedException, ExecutionException {
+	public Map<String, String> get(String key, boolean isRange) throws InterruptedException, ExecutionException {
 		GetResponse getResponse;
-		ByteSequence key = ByteSequence.from(beginRange.getBytes());
-		if(beginRange == endRange) {
-			getResponse = kvClient.get(key).get();
+		ByteSequence keyBytes = ByteSequence.from(key.getBytes());
+		if(!isRange) {
+			getResponse = kvClient.get(keyBytes).get();
 		}
 		else {
-			ByteSequence endKey = ByteSequence.from(endRange.getBytes());
-			GetOption option = GetOption.newBuilder().withRange(endKey).build();
-			getResponse = kvClient.get(key, option).get();
+			GetOption option = GetOption.newBuilder().withPrefix(keyBytes).build();
+			getResponse = kvClient.get(keyBytes, option).get();
 		}
 		Map<String, String> keyValueMap = new HashMap<>();
 		for (KeyValue kv : getResponse.getKvs()) {
@@ -74,23 +68,16 @@ public class Etcd {
 		}
 		return keyValueMap;
 	}
-	
-	
-	public void delete(String key) throws InterruptedException, ExecutionException {
-		delete(key,key);
-	}
+	/**
+	 * Deletes all key value pairs that begin with prefix <i> key </i>
+	 * 
+	 * @param key Key to delete
+	 */
 
-	public void delete(String begin, String end) throws InterruptedException, ExecutionException {
-		GetResponse getResponse;
-		ByteSequence key = ByteSequence.from(begin.getBytes());
-		if(begin == end) {
-			getResponse = kvClient.get(key).get();
-		} 
-		else {
-			ByteSequence endRange = ByteSequence.from(end.getBytes());
-			GetOption option = GetOption.newBuilder().withRange(endRange).build();
-			getResponse = kvClient.get(key,option).get();
-		}
+	public void delete(String key) throws InterruptedException, ExecutionException {
+		ByteSequence keyBtyes = ByteSequence.from(key.getBytes());
+		GetOption option = GetOption.newBuilder().withPrefix(keyBtyes).build();
+		GetResponse getResponse = kvClient.get(keyBtyes,option).get();
 		for (KeyValue kv : getResponse.getKvs()) {
 		        kvClient.delete(kv.getKey());
 		}
