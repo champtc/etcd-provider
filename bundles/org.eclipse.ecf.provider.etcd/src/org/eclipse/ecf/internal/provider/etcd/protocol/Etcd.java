@@ -68,12 +68,12 @@ public class Etcd {
 		}
 		return keyValueMap;
 	}
+	
 	/**
 	 * Deletes all key value pairs that begin with prefix <i> key </i>
 	 * 
 	 * @param key Key to delete
 	 */
-
 	public void delete(String key) throws InterruptedException, ExecutionException {
 		ByteSequence keyBtyes = ByteSequence.from(key.getBytes());
 		GetOption option = GetOption.newBuilder().withPrefix(keyBtyes).build();
