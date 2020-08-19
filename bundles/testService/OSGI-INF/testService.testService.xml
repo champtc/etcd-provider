@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.3.0" activate="activate" enabled="true" immediate="true" name="testService.testService">
+   <property name="service.exported.interfaces" value="ai.darklight.dl.shared.init.cert.ICertificateManager"/>
+   <property name="service.exported.configs" value="ecf.generic.server"/>
+   <property name="ecf.generic.server.needClientAuth" value="true"/>
+   <property name="osgi.basic.timeout" value="50000"/>
+   <service scope="singleton">
+      <provide interface="testService.testService"/>
+   </service>
+   <implementation class="testService.testService"/>
+</scr:component>

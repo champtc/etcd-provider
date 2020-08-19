@@ -55,5 +55,12 @@
 		<unit id="org.slf4j.binding.nop" version="1.7.30.v20200204-2150"/>
 		<unit id="org.slf4j.binding.nop.source" version="1.7.30.v20200204-2150"/>
 	</location>
+	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+		<repository location="https://download.eclipse.org/tools/orbit/downloads/drops/R20200529191137/repository/"/>
+		<unit id="javax.ws.rs" version="2.1.6.v20200505-2127"/>
+		<unit id="javax.ws.rs.source" version="2.1.6.v20200505-2127"/>
+		<unit id="org.apache.commons.logging" version="1.2.0.v20180409-1502"/>
+		<unit id="org.apache.commons.logging.source" version="1.2.0.v20180409-1502"/>
+	</location>
 </locations>
 </target>

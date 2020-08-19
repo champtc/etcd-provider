@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: TestService
+Bundle-SymbolicName: testService;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Automatic-Module-Name: testService
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Import-Package: javax.ws.rs;version="2.1.6",
+ org.eclipse.core.runtime;version="3.5.0",
+ org.osgi.framework;version="1.9.0",
+ org.osgi.service.component.annotations
+Service-Component: OSGI-INF/testService.testService.xml
+Bundle-ActivationPolicy: lazy
