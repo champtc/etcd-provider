@@ -12,6 +12,8 @@ import io.etcd.jetcd.KeyValue;
 import io.etcd.jetcd.kv.GetResponse;
 import io.etcd.jetcd.options.GetOption;
 
+//import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdException;
+
 
 public class Etcd {
 	private Client client;
@@ -23,10 +25,14 @@ public class Etcd {
 		this.kvClient = client.getKVClient();
 	}
 	
-	public void put(String k, String v) throws InterruptedException, ExecutionException  {
+	public void put(String k, String v) throws EtcdException  {
 		ByteSequence key = ByteSequence.from(k.getBytes());
 		ByteSequence value = ByteSequence.from(v.getBytes());
-		kvClient.put(key, value).get();
+		try {
+			kvClient.put(key, value).get();
+		} catch (Exception e) {
+			throw new EtcdException("Unable to put key " + key, e); //$NON-NLS-1$
+		}
 	}
 	
 	/**
@@ -36,7 +42,7 @@ public class Etcd {
 	 * @return Map containing the key value pair
 	 * 
 	 */
-	public Map<String, String> get(String key) throws InterruptedException, ExecutionException {
+	public Map<String, String> get(String key) throws EtcdException{
 		return get(key, false);
 	}
 	
@@ -49,15 +55,23 @@ public class Etcd {
      * @param  isRange Treat <i> key </i> as the prefix for a range request or not 
      * @return  Map of key value pairs
      */
-	public Map<String, String> get(String key, boolean isRange) throws InterruptedException, ExecutionException {
-		GetResponse getResponse;
+	public Map<String, String> get(String key, boolean isRange) throws EtcdException{
+		GetResponse getResponse = null;
 		ByteSequence keyBytes = ByteSequence.from(key.getBytes());
 		if(!isRange) {
-			getResponse = kvClient.get(keyBytes).get();
+			try {
+				getResponse = kvClient.get(keyBytes).get();
+			} catch (Exception e) {
+				throw new EtcdException("Unable to get key " + key, e); //$NON-NLS-1$
+			}
 		}
 		else {
 			GetOption option = GetOption.newBuilder().withPrefix(keyBytes).build();
-			getResponse = kvClient.get(keyBytes, option).get();
+			try {
+				getResponse = kvClient.get(keyBytes, option).get();
+			} catch (Exception e) {
+				throw new EtcdException("Unable to get key " + key, e); //$NON-NLS-1$
+			}
 		}
 		Map<String, String> keyValueMap = new HashMap<>();
 		for (KeyValue kv : getResponse.getKvs()) {

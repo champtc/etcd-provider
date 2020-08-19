@@ -43,6 +43,7 @@ import org.eclipse.ecf.discovery.identity.IServiceTypeID;
 import org.eclipse.ecf.internal.provider.etcd.Activator;
 import org.eclipse.ecf.internal.provider.etcd.DebugOptions;
 import org.eclipse.ecf.internal.provider.etcd.LogUtility;
+import org.eclipse.ecf.internal.provider.etcd.protocol.Etcd;
 import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdDeleteRequest;
 import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdException;
 import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdGetRequest;
@@ -235,14 +236,23 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 		this.keyPrefix = verifySlash("/" + getID().getName()); //$NON-NLS-1$
 
 		// Then set directory URL
-		this.dirUrl = this.etcdTargetID.getLocation().toString() + this.keyPrefix;
+		this.dirUrl = this.etcdTargetID.getLocation().toString();// + this.keyPrefix;
 
 		String directoryUrl = getDirectoryUrl();
+		Etcd etcd = new Etcd(directoryUrl);
+		
 		int sessionTTL = config.getSessionTTL();
 		try {
+			// if dir not present, try to create
+			if(etcd.get(this.keyPrefix).isEmpty()) {
+				etcd.put(this.keyPrefix, "Directory"); //$NON-NLS-1$
+			}
+			
+			
+			
+			
 			EtcdResponse topResponse = new EtcdGetRequest(directoryUrl, true).execute();
 			if (topResponse.isError()) {
-				// if dir not present, try to create
 				topResponse = new EtcdSetRequest(directoryUrl).execute();
 				// If could not create then we cannot continue
 				if (topResponse.isError())
