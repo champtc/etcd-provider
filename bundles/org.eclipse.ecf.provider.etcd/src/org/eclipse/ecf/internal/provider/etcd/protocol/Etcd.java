@@ -9,8 +9,10 @@ import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KV;
 import io.etcd.jetcd.KeyValue;
+import io.etcd.jetcd.api.LeaseGrantRequest;
 import io.etcd.jetcd.kv.GetResponse;
 import io.etcd.jetcd.options.GetOption;
+import io.etcd.jetcd.options.PutOption;
 
 //import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdException;
 
@@ -23,13 +25,26 @@ public class Etcd {
 	public Etcd(String endpoint) {
 		this.client = Client.builder().endpoints(endpoint).build();
 		this.kvClient = client.getKVClient();
+
 	}
 	
-	public void put(String k, String v) throws EtcdException  {
+	public void put(String k, String v) throws EtcdException {
+		put(k, v, -1);
+	}
+	
+	public void put(String k, String v, int ttl) throws EtcdException  {
 		ByteSequence key = ByteSequence.from(k.getBytes());
 		ByteSequence value = ByteSequence.from(v.getBytes());
+		
 		try {
-			kvClient.put(key, value).get();
+			if(ttl == -1) {
+				kvClient.put(key, value).get();
+			}
+			else {
+				LeaseGrantRequest leaseGrantRequest = LeaseGrantRequest.newBuilder().setTTL(ttl).build();
+				PutOption option = PutOption.newBuilder().withLeaseId(leaseGrantRequest.getID()).build();
+				kvClient.put(key, value, option).get();
+			}
 		} catch (Exception e) {
 			throw new EtcdException("Unable to put key " + key, e); //$NON-NLS-1$
 		}
