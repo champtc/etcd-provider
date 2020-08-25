@@ -42,6 +42,8 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 	public static final Client client = Client.builder().endpoints("http://localhost:2379").build();
 	
 	public static final KV kvClient = client.getKVClient();
+	
+	public static final Etcd etcd = new Etcd("http://localhost:2379");
 
 	public static final String TEST_HOST = System.getProperty(
 			"etcd.test.hostname", "localhost");
@@ -171,7 +173,6 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 		//ByteSequence keyBytes = ByteSequence.from("foo".getBytes());
 		//GetResponse	getResponse = kvClient.get(keyBytes).get();
 		
-		Etcd etcd = new Etcd("http://localhost:2379");
 		Map<String, String> map = etcd.get("foo", false);
 		map.clear();
 	}
@@ -248,10 +249,10 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 	
 	//This really isn't an error, it just doesn't return anything useful...
 	public void testGetRequestError() throws Exception {
-		ByteSequence key = ByteSequence.from(Long.toString(System.currentTimeMillis()).getBytes());
-		CompletableFuture<GetResponse> getFuture = kvClient.get(key);
-		GetResponse response = getFuture.get();
-		assertTrue(response.getKvs().isEmpty());
+//		ByteSequence key = ByteSequence.from(Long.toString(System.currentTimeMillis()).getBytes());
+//		CompletableFuture<GetResponse> getFuture = kvClient.get(key);
+//		GetResponse response = getFuture.get();
+//		assertTrue(response.getKvs().isEmpty());
 		
 //		EtcdGetRequest request = new EtcdGetRequest(GET_FAIL);
 //		EtcdResponse response = request.execute();
@@ -261,10 +262,8 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 	
 	//A put request is always successful
 	public void testCreateSucceed() throws Exception {
-		ByteSequence key = ByteSequence.from("/foo".getBytes());
-		ByteSequence value = ByteSequence.from("bar".getBytes());
-		PutResponse putResponse = kvClient.put(key, value).get();
-		assertTrue(putResponse != null);
+		etcd.put("foo", "bar", 5);
+		
 		
 //		System.out.println("testCreateSucceed(" + SET_SUCCEED + ")");
 //		EtcdResponse response = new EtcdSetRequest(SET_SUCCEED,

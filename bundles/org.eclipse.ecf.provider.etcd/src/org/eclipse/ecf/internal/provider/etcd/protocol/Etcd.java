@@ -9,8 +9,8 @@ import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KV;
 import io.etcd.jetcd.KeyValue;
-import io.etcd.jetcd.api.LeaseGrantRequest;
 import io.etcd.jetcd.kv.GetResponse;
+import io.etcd.jetcd.lease.LeaseGrantResponse;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
 
@@ -29,7 +29,7 @@ public class Etcd {
 	}
 	
 	public void put(String k, String v) throws EtcdException {
-		put(k, v, -1);
+		put(k, v, 0);
 	}
 	
 	public void put(String k, String v, int ttl) throws EtcdException  {
@@ -37,12 +37,12 @@ public class Etcd {
 		ByteSequence value = ByteSequence.from(v.getBytes());
 		
 		try {
-			if(ttl == -1) {
+			if(ttl == 0) {
 				kvClient.put(key, value).get();
 			}
 			else {
-				LeaseGrantRequest leaseGrantRequest = LeaseGrantRequest.newBuilder().setTTL(ttl).build();
-				PutOption option = PutOption.newBuilder().withLeaseId(leaseGrantRequest.getID()).build();
+				LeaseGrantResponse leaseGrantResponse = client.getLeaseClient().grant(ttl).get();
+				PutOption option = PutOption.newBuilder().withLeaseId(leaseGrantResponse.getID()).build();
 				kvClient.put(key, value, option).get();
 			}
 		} catch (Exception e) {
