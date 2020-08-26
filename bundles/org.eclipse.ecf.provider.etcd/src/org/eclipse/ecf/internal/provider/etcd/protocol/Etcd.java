@@ -9,18 +9,19 @@ import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KV;
 import io.etcd.jetcd.KeyValue;
+import io.etcd.jetcd.Watch;
+import io.etcd.jetcd.Watch.Watcher;
 import io.etcd.jetcd.kv.GetResponse;
 import io.etcd.jetcd.lease.LeaseGrantResponse;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
 
-//import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdException;
-
-
 public class Etcd {
 	private Client client;
 	
 	private KV kvClient;
+	
+	private Watcher watcher = null;
 	
 	public Etcd(String endpoint) {
 		this.client = Client.builder().endpoints(endpoint).build();
@@ -104,17 +105,25 @@ public class Etcd {
 	 * @param key Key to delete
 	 */
 	public void delete(String key) throws InterruptedException, ExecutionException {
-		ByteSequence keyBtyes = ByteSequence.from(key.getBytes());
-		GetOption option = GetOption.newBuilder().withPrefix(keyBtyes).build();
-		GetResponse getResponse = kvClient.get(keyBtyes,option).get();
+		ByteSequence keyBytes = ByteSequence.from(key.getBytes());
+		GetOption option = GetOption.newBuilder().withPrefix(keyBytes).build();
+		GetResponse getResponse = kvClient.get(keyBytes,option).get();
 		for (KeyValue kv : getResponse.getKvs()) {
 		        kvClient.delete(kv.getKey());
 		}
 	}
 	
-	//TODO
-	public void watch(String begin, String end) {
-		
+
+	public void watch(String key, Watch.Listener listener) {
+		ByteSequence keyBytes = ByteSequence.from(key.getBytes());
+		Watch watch = client.getWatchClient();
+		this.watcher = watch.watch(keyBytes, listener);
+	}
+	
+	public void closeWatch() {
+		if(this.watcher == null)
+			return;
+		this.watcher.close();
 	}
 	
 }
