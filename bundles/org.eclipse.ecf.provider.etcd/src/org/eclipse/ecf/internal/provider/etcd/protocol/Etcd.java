@@ -3,13 +3,12 @@ package org.eclipse.ecf.internal.provider.etcd.protocol;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KV;
 import io.etcd.jetcd.KeyValue;
 import io.etcd.jetcd.Watch;
+import io.etcd.jetcd.Watch.Listener;
 import io.etcd.jetcd.Watch.Watcher;
 import io.etcd.jetcd.kv.GetResponse;
 import io.etcd.jetcd.lease.LeaseGrantResponse;
@@ -18,21 +17,39 @@ import io.etcd.jetcd.options.PutOption;
 
 public class Etcd {
 	private Client client;
-	
 	private KV kvClient;
-	
 	private Watcher watcher = null;
-	
+
+	/**
+	 * Initializes ETCD client connection
+	 * 
+	 * @param endpoint endpoint to connect to the ETCD server
+	 */
 	public Etcd(String endpoint) {
 		this.client = Client.builder().endpoints(endpoint).build();
 		this.kvClient = client.getKVClient();
 
 	}
 	
+	/**
+	 * Puts a key-value pair into ETCD.
+	 * 
+	 * @param k key to put
+	 * @param v value to put
+	 * @throws EtcdException
+	 */
 	public void put(String k, String v) throws EtcdException {
 		put(k, v, 0);
 	}
 	
+	/**
+	 * Puts a key-value pair into ETCD. If <i> ttl </i> is 0 no ttl is attached to the kv pair
+	 * 
+	 * @param k key to put
+	 * @param v value to put
+	 * @param ttl time-to-live value in seconds
+	 * @throws EtcdException
+	 */
 	public void put(String k, String v, int ttl) throws EtcdException  {
 		ByteSequence key = ByteSequence.from(k.getBytes());
 		ByteSequence value = ByteSequence.from(v.getBytes());
@@ -56,7 +73,7 @@ public class Etcd {
 	 * 
 	 * @param key Key to return
 	 * @return Map containing the key value pair
-	 * 
+	 * @throws EtcdException
 	 */
 	public Map<String, String> get(String key) throws EtcdException{
 		return get(key, false);
@@ -70,6 +87,7 @@ public class Etcd {
      * @param  key Key to get
      * @param  isRange Treat <i> key </i> as the prefix for a range request or not 
      * @return  Map of key value pairs
+     * @throws EtcdException
      */
 	public Map<String, String> get(String key, boolean isRange) throws EtcdException{
 		GetResponse getResponse = null;
@@ -103,23 +121,37 @@ public class Etcd {
 	 * Deletes all key value pairs that begin with prefix <i> key </i>
 	 * 
 	 * @param key Key to delete
+	 * @throws EtcdException
 	 */
-	public void delete(String key) throws InterruptedException, ExecutionException {
+	public void delete(String key) throws EtcdException {
 		ByteSequence keyBytes = ByteSequence.from(key.getBytes());
 		GetOption option = GetOption.newBuilder().withPrefix(keyBytes).build();
-		GetResponse getResponse = kvClient.get(keyBytes,option).get();
-		for (KeyValue kv : getResponse.getKvs()) {
-		        kvClient.delete(kv.getKey());
+		GetResponse getResponse;
+		try {
+			getResponse = kvClient.get(keyBytes,option).get();
+			for (KeyValue kv : getResponse.getKvs()) {
+				kvClient.delete(kv.getKey());
+			}
+		} catch (Exception e) {
+			throw new EtcdException("Unable to delete key " + key, e); //$NON-NLS-1$
 		}
 	}
 	
-
-	public void watch(String key, Watch.Listener listener) {
+	/**
+	 * Adds a watch to the specified key
+	 * 
+	 * @param key key to watch
+	 * @param listener listener to attach to the watch
+	 */
+	public void watch(String key, Listener listener) {
 		ByteSequence keyBytes = ByteSequence.from(key.getBytes());
 		Watch watch = client.getWatchClient();
 		this.watcher = watch.watch(keyBytes, listener);
 	}
 	
+	/**
+	 * CLoses watch request
+	 */
 	public void closeWatch() {
 		if(this.watcher == null)
 			return;
