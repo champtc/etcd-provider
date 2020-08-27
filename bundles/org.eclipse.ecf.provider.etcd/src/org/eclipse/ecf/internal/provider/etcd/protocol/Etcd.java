@@ -120,12 +120,20 @@ public class Etcd {
 	/**
 	 * Deletes all key value pairs that begin with prefix <i> key </i>
 	 * 
+	 * If <i> key </i> is '\0', all key-value pairs will be deleted
+	 * 
 	 * @param key Key to delete
 	 * @throws EtcdException
 	 */
 	public void delete(String key) throws EtcdException {
 		ByteSequence keyBytes = ByteSequence.from(key.getBytes());
-		GetOption option = GetOption.newBuilder().withPrefix(keyBytes).build();
+		GetOption option;
+		
+		//if key is \0, will delete everything
+		if(key.equals("\0")) //$NON-NLS-1$
+			option = GetOption.newBuilder().withRange(keyBytes).build();
+		else
+			option = GetOption.newBuilder().withPrefix(keyBytes).build();
 		GetResponse getResponse;
 		try {
 			getResponse = kvClient.get(keyBytes,option).get();
