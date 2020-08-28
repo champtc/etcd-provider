@@ -37,7 +37,7 @@ public class EtcdDiscoveryContainerConfig extends DiscoveryContainerConfig {
 	public static final String ETCD_TARGETID_PATH_PROP = EtcdDiscoveryContainerInstantiator.NAME
 			+ ".path"; //$NON-NLS-1$
 	public static final String ETCD_TARGETID_PATH_DEFAULT = System.getProperty(
-			ETCD_TARGETID_PATH_PROP, "/v2/keys"); //$NON-NLS-1$
+			ETCD_TARGETID_PATH_PROP, ""); //$NON-NLS-1$
 
 	public static final String ETCD_TARGETID_PROP = EtcdDiscoveryContainerInstantiator.NAME
 			+ ".targetid"; //$NON-NLS-1$
