@@ -3,6 +3,7 @@ package org.eclipse.ecf.internal.provider.etcd.protocol;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KV;
@@ -28,7 +29,14 @@ public class Etcd {
 	public Etcd(String endpoint) {
 		this.client = Client.builder().endpoints(endpoint).build();
 		this.kvClient = client.getKVClient();
-
+	}
+	
+	/**
+	 * CLoses the clients connection to ETCD
+	 */
+	public void close() {
+		closeWatch();
+		client.close();
 	}
 	
 	/**
@@ -164,6 +172,15 @@ public class Etcd {
 		if(this.watcher == null)
 			return;
 		this.watcher.close();
+	}
+	
+	/**
+	 * Checks if there is an active watcher
+	 * 
+	 * @return true if there is an active watcher.
+	 */
+	public boolean isActiveWatch() {
+		return this.watcher == null ? false : true;
 	}
 	
 }
