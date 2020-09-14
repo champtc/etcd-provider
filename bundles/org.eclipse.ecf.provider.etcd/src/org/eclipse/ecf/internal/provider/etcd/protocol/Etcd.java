@@ -15,12 +15,14 @@ import io.etcd.jetcd.kv.GetResponse;
 import io.etcd.jetcd.lease.LeaseGrantResponse;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
+import io.etcd.jetcd.common.exception.EtcdException;
+import io.etcd.jetcd.common.exception.EtcdExceptionFactory;
 
 public class Etcd {
 	private Client client;
 	private KV kvClient;
 	private Watcher watcher = null;
-
+	
 	/**
 	 * Initializes ETCD client connection
 	 * 
@@ -72,7 +74,7 @@ public class Etcd {
 				kvClient.put(key, value, option).get();
 			}
 		} catch (Exception e) {
-			throw new EtcdException("Unable to put key " + key, e); //$NON-NLS-1$
+			throw EtcdExceptionFactory.newEtcdException(null, "Unable to put key " + key, e); //$NON-NLS-1$
 		}
 	}
 	
@@ -104,7 +106,7 @@ public class Etcd {
 			try {
 				getResponse = kvClient.get(keyBytes).get();
 			} catch (Exception e) {
-				throw new EtcdException("Unable to get key " + key, e); //$NON-NLS-1$
+				throw EtcdExceptionFactory.newEtcdException(null, "Unable to get key " + key, e); //$NON-NLS-1$
 			}
 		}
 		else {
@@ -112,7 +114,7 @@ public class Etcd {
 			try {
 				getResponse = kvClient.get(keyBytes, option).get();
 			} catch (Exception e) {
-				throw new EtcdException("Unable to get key " + key, e); //$NON-NLS-1$
+				throw EtcdExceptionFactory.newEtcdException(null, "Unable to get key " + key, e); //$NON-NLS-1$
 			}
 		}
 		Map<String, String> keyValueMap = new HashMap<>();
@@ -149,7 +151,7 @@ public class Etcd {
 				kvClient.delete(kv.getKey());
 			}
 		} catch (Exception e) {
-			throw new EtcdException("Unable to delete key " + key, e); //$NON-NLS-1$
+			throw EtcdExceptionFactory.newEtcdException(null, "Unable to delete key " + key, e); //$NON-NLS-1$
 		}
 	}
 	

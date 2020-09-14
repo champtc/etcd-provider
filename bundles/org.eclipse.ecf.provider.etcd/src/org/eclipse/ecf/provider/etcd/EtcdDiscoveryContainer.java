@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-//import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,14 +43,14 @@ import org.eclipse.ecf.internal.provider.etcd.Activator;
 import org.eclipse.ecf.internal.provider.etcd.DebugOptions;
 import org.eclipse.ecf.internal.provider.etcd.LogUtility;
 import org.eclipse.ecf.internal.provider.etcd.protocol.Etcd;
-import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdException;
-import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdNode;
+//import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdException;
 import org.eclipse.ecf.provider.etcd.identity.EtcdNamespace;
 import org.eclipse.ecf.provider.etcd.identity.EtcdServiceID;
 import org.json.JSONException;
 
 import io.etcd.jetcd.Watch;
 import io.etcd.jetcd.Watch.Listener;
+import io.etcd.jetcd.common.exception.EtcdException;
 import io.etcd.jetcd.watch.WatchEvent;
 import io.etcd.jetcd.watch.WatchEvent.EventType;
 
