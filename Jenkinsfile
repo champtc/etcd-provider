@@ -96,7 +96,7 @@ node {
 				}
 				
 				withCredentials([string(credentialsId: 'KEY_PASS', variable: 'KEY'), string(credentialsId: 'STORE_PASS', variable: 'STORE'), string(credentialsId: 'PFX_PASS', variable: 'PFX')]) {
-					stage('Build Client') {
+					stage('Build') {
 						if (isUnix()) {
 							sh "cd ${workingFolder}\n${mvnhome}/bin/mvn clean package deploy -f ./pom.xml -Dtycho.localArtifacts=ignore -Dmaven.test.skip=true"
 						} else {
@@ -106,7 +106,7 @@ node {
 
 					stage('Record Results') {
 						recordIssues enabledForFailure: true, tools: [mavenConsole(), java(), taskScanner(highTags: 'FIXME', ignoreCase: true, includePattern: '*/src/**/*.java', lowTags: 'XXX', normalTags: 'TODO')]
-						currentBuild.description="Version: ${buildVersion}"
+//						currentBuild.description="Version: ${buildVersion}"
 						junit allowEmptyResults: true, healthScaleFactor: 0.0, testResults: '**/generated/test-reports/**/*.xml'
 						jacoco classPattern: '**/target/classes, **/bin', exclusionPattern: '**/*Test*.class', sourcePattern: '*plugins/**/src,*/src'
 						step([$class: 'TeamUpdateWorkItemPostBuildAction'])
