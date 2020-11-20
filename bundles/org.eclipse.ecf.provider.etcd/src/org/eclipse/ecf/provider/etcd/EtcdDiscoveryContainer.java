@@ -470,7 +470,9 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 			
 			while (!watchDone) {
 				try {
-					watchEvents.wait(10);
+					synchronized (watchEvents) {
+						watchEvents.wait(10);
+					}
 					if(monitor.isCanceled()) {
 						etcd.closeWatch();
 						return Status.CANCEL_STATUS;
