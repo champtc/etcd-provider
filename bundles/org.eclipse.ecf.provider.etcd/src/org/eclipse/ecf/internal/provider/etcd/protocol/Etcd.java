@@ -3,6 +3,7 @@ package org.eclipse.ecf.internal.provider.etcd.protocol;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
@@ -21,7 +22,7 @@ import io.etcd.jetcd.common.exception.EtcdExceptionFactory;
 public class Etcd {
 	private Client client;
 	private KV kvClient;
-	private Watcher watcher = null;
+	private Map<String, Watcher> watchList;
 	
 	/**
 	 * Initializes ETCD client connection
@@ -31,13 +32,16 @@ public class Etcd {
 	public Etcd(String endpoint) {
 		this.client = Client.builder().endpoints(endpoint).build();
 		this.kvClient = client.getKVClient();
+		watchList = new HashMap<>();
 	}
 	
 	/**
 	 * CLoses the clients connection to ETCD
 	 */
 	public void close() {
-		closeWatch();
+		Set<String> keySet = watchList.keySet();
+		for(String key : keySet)
+			closeWatch(key);			
 		client.close();
 	}
 	
@@ -164,25 +168,30 @@ public class Etcd {
 	public void watch(String key, Listener listener) {
 		ByteSequence keyBytes = ByteSequence.from(key.getBytes());
 		Watch watch = client.getWatchClient();
-		this.watcher = watch.watch(keyBytes, listener);
+		this.watchList.put(key, watch.watch(keyBytes, listener));
+		//this.watcher = watch.watch(keyBytes, listener);
 	}
 	
 	/**
-	 * CLoses watch request
+	 * Closes watch request on the specified key
 	 */
-	public void closeWatch() {
-		if(this.watcher == null)
+	public void closeWatch(String key) {
+		if(!watchList.containsKey(key))
 			return;
-		this.watcher.close();
+		else {
+			watchList.get(key).close();
+			watchList.remove(key);
+		}
 	}
 	
+	
 	/**
-	 * Checks if there is an active watcher
+	 * Checks if there is an active watcher on a key
 	 * 
-	 * @return true if there is an active watcher.
+	 * @return true if there is an active watcher on the key.
 	 */
-	public boolean isActiveWatch() {
-		return this.watcher == null ? false : true;
+	public boolean isActiveWatch(String key) {
+		return watchList.containsKey(key) ? true : false;
 	}
 	
 }

@@ -2,7 +2,9 @@ package org.eclipse.ecf.tests.provider.etcd;
 
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
+
 import org.eclipse.ecf.discovery.IDiscoveryAdvertiser;
 import org.eclipse.ecf.discovery.IDiscoveryLocator;
 import org.eclipse.ecf.discovery.IServiceInfo;
@@ -14,6 +16,11 @@ import org.eclipse.ecf.provider.etcd.EtcdServiceInfo;
 import org.eclipse.ecf.provider.etcd.identity.EtcdNamespace;
 import org.eclipse.ecf.tests.discovery.AbstractDiscoveryTest;
 import org.eclipse.ecf.tests.discovery.Activator;
+
+import io.etcd.jetcd.Watch;
+import io.etcd.jetcd.Watch.Listener;
+import io.etcd.jetcd.watch.WatchEvent;
+import io.etcd.jetcd.watch.WatchEvent.EventType;
 
 public class DiscoveryTest extends AbstractDiscoveryTest {
 	
@@ -114,6 +121,43 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 	//A put request is always successful
 	public void testCreateSucceed() throws Exception {
 		etcd.put("foo", "bar", 5);
+		//etcd.put("foo", "bar");
+		
+		Map<String, EventType> watchEvents = new HashMap<>();
+		
+		Listener listener = Watch.listener(response -> {
+			for(WatchEvent event : response.getEvents()) {
+				EventType eventType = event.getEventType();
+				watchEvents.put("Event", eventType);//$NON-NLS-1$
+				watchEvents.notifyAll();
+			}
+		});
+		
+		etcd.watch("foo", listener);
+		//Thread.sleep(1000);
+		//etcd.delete("foo");
+		//etcd.closeWatch();
+		
+		Boolean watchDone = false;
+		
+		while (!watchDone) {
+			try {
+				synchronized (watchEvents) {
+					watchEvents.wait(10);
+				}
+				if(watchEvents.isEmpty())
+					continue;
+				if(watchEvents.get("Event") == EventType.DELETE) { //$NON-NLS-1$
+					etcd.closeWatch("foo");
+					watchDone = true;
+					continue;
+				}
+			} catch (InterruptedException e) {
+				//logEtcdError("watchJob.run", "Unexpected exception in watch job", e); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		}
+		etcd.close();
+		
 	}
 
 	public void testSerializeAndDeserializeServiceInfo() throws Exception {

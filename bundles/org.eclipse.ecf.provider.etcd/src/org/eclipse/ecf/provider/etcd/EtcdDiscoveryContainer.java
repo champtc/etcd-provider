@@ -309,7 +309,7 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 	//EtcdNode topNode;
 
 	private void startWatchJob() {
-		if (!etcd.isActiveWatch()) {
+		if (!etcd.isActiveWatch(keyPrefix)) {
 			trace("startWatchJob", "starting watchJob");  //$NON-NLS-1$//$NON-NLS-2$
 			int startDelay = getEtcdConfig().getStartDelay();
 			watchJob.schedule(startDelay);
@@ -377,7 +377,6 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 					}
 					watchJob = null;
 				}
-				etcd.closeWatch();
 			}
 			etcd.close();
 			fireContainerEvent(new ContainerDisconnectedEvent(this.getID(), anID));
@@ -474,17 +473,17 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 						watchEvents.wait(10);
 					}
 					if(monitor.isCanceled()) {
-						etcd.closeWatch();
+						etcd.closeWatch(keyPrefix);
 						return Status.CANCEL_STATUS;
 					}
 					if (etcdTargetID == null || localSessionId == null) {
-						etcd.closeWatch();
+						etcd.closeWatch(keyPrefix);
 						return Status.CANCEL_STATUS;
 					}
 					if(watchEvents.isEmpty())
 						continue;
 					if(watchEvents.get("Event") == EventType.DELETE) { //$NON-NLS-1$
-						etcd.closeWatch();
+						etcd.closeWatch(keyPrefix);
 						watchDone = true;
 						continue;
 					}
