@@ -155,14 +155,14 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 			throw new IllegalArgumentException("Exception serializing serviceInfo=" + si, e); //$NON-NLS-1$
 		}
 		
-		//String fullKey = createFullKey(siKey);
+		String fullKey = createFullKey(siKey);
 		synchronized (services) {
 			startWatchJob();
 //			executeEtcdRequest("registerService", //$NON-NLS-1$
 //					new EtcdSetRequest(fullKey, siValue, etcdTTL),
 //					"Error in EtcdServiceInfo set request serviceInfo=" + si); //$NON-NLS-1$
 			try {
-				etcd.put(siKey.getFullKey(), siValue, etcdTTL);
+				etcd.put(fullKey, siValue, etcdTTL);
 			} catch (EtcdException e) {
 				logAndThrowEtcdError("registerService", "Error communicating with etcd server", e); //$NON-NLS-1$ //$NON-NLS-2$
 			}
@@ -566,14 +566,14 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 //		}
 //		return new EtcdServiceInfoKey(sessionKey, siKey);
 //	}
-
-	IStatus createErrorStatus(String message) {
-		return new Status(IStatus.ERROR, Activator.PLUGIN_ID, message);
-	}
-
-	IStatus createErrorStatus(String message, Throwable t) {
-		return new Status(IStatus.ERROR, Activator.PLUGIN_ID, message, t);
-	}
+//
+//	IStatus createErrorStatus(String message) {
+//		return new Status(IStatus.ERROR, Activator.PLUGIN_ID, message);
+//	}
+//
+//	IStatus createErrorStatus(String message, Throwable t) {
+//		return new Status(IStatus.ERROR, Activator.PLUGIN_ID, message, t);
+//	}
 
 //	private void handleRemoveNode(EtcdNode node) {
 //		trace("handleRemoveNode", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
