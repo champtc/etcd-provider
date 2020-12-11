@@ -187,7 +187,7 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 		EtcdServiceInfo si = null;
 		synchronized (services) {
 			try {
-				etcd.delete(key.fullKey);
+				etcd.delete(fullKey);
 //				EtcdResponse r = new EtcdDeleteRequest(fullKey).execute();
 //				if (r.isError())
 //					logEtcdError("unregisterService", "EtcdDelete request failed", new EtcdException(r.getErrorResponse().getMessage())); //$NON-NLS-1$ //$NON-NLS-2$
