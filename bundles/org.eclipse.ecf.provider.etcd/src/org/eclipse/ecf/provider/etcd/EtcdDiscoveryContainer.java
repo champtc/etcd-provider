@@ -155,14 +155,14 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 			throw new IllegalArgumentException("Exception serializing serviceInfo=" + si, e); //$NON-NLS-1$
 		}
 		
-		//String fullKey = createFullKey(siKey);
+//		String fullKey = createFullKey(siKey);
 		synchronized (services) {
 			startWatchJob();
 //			executeEtcdRequest("registerService", //$NON-NLS-1$
 //					new EtcdSetRequest(fullKey, siValue, etcdTTL),
 //					"Error in EtcdServiceInfo set request serviceInfo=" + si); //$NON-NLS-1$
 			try {
-				etcd.put(siKey.getFullKey(), siValue, etcdTTL);
+				etcd.put(getKey() + siKey.getFullKey(), siValue, etcdTTL);
 			} catch (EtcdException e) {
 				logAndThrowEtcdError("registerService", "Error communicating with etcd server", e); //$NON-NLS-1$ //$NON-NLS-2$
 			}
@@ -187,7 +187,7 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 		EtcdServiceInfo si = null;
 		synchronized (services) {
 			try {
-				etcd.delete(key.fullKey);
+				etcd.delete(getKey() + key.fullKey);
 //				EtcdResponse r = new EtcdDeleteRequest(fullKey).execute();
 //				if (r.isError())
 //					logEtcdError("unregisterService", "EtcdDelete request failed", new EtcdException(r.getErrorResponse().getMessage())); //$NON-NLS-1$ //$NON-NLS-2$
@@ -351,7 +351,7 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 			synchronized (services) {
 				// delete our sessionId from etcd service
 				try {
-					etcd.delete(this.localSessionId);
+					etcd.delete(getKey() + this.localSessionId);
 					//new EtcdDeleteRequest(getDirectoryUrl() + this.localSessionId, true).execute();
 				} catch (EtcdException e) {
 					logEtcdError("shutdownEtcdConnection", "Error with etcd shutdown", e); //$NON-NLS-1$ //$NON-NLS-2$
@@ -417,7 +417,7 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 						waittime -= DELAY;
 						if (waittime <= 0) {
 							try {
-								etcd.put(EtcdDiscoveryContainer.this.localSessionId, DIRECTORY, this.ttl);
+								etcd.put(getKey() + EtcdDiscoveryContainer.this.localSessionId, DIRECTORY, this.ttl);
 //								new EtcdSetRequest(getDirectoryUrl() + EtcdDiscoveryContainer.this.localSessionId,
 //										this.ttl, true).execute();
 							} catch (EtcdException e) {

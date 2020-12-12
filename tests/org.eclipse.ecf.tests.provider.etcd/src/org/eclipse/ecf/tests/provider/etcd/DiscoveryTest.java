@@ -24,7 +24,7 @@ import io.etcd.jetcd.watch.WatchEvent.EventType;
 
 public class DiscoveryTest extends AbstractDiscoveryTest {
 	
-	public static final Etcd etcd = new Etcd("http://localhost:2379");
+	public Etcd etcd = null;
 
 	public DiscoveryTest() {
 		super(EtcdDiscoveryContainerInstantiator.NAME);
@@ -33,11 +33,13 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 	@Override
 	protected void setUp() throws Exception {
 		new EtcdNamespace();
+		etcd = new Etcd("http://localhost:2379");
 		super.setUp();
 	}
 
 	@Override
 	protected void tearDown() throws Exception {
+		etcd.close();
 		super.tearDown();
 	}
 
@@ -61,14 +63,14 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 		advertiser.registerService(this.serviceInfo);
 		// sleep for while
 		try {
-			Thread.sleep(10000);
+			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		advertiser.unregisterAllServices();
 		// sleep for while
 		try {
-			Thread.sleep(10000);
+			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -79,29 +81,29 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 		advertiser.registerService(this.serviceInfo);
 		// sleep for while
 		try {
-			Thread.sleep(5000);
+			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		IDiscoveryLocator locator = getDiscoveryLocator();
 		IServiceInfo[] serviceInfos = locator.getServices();
 		assertTrue(serviceInfos.length > 0);
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+
 		advertiser.unregisterAllServices();
 		// sleep for while
 		try {
-			Thread.sleep(10000);
+			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		locator = getDiscoveryLocator();
+		serviceInfos = locator.getServices();
+		assertTrue(serviceInfos.length == 0);
 	}
 	
 
 	public void testGetRequestSucceed() throws Exception {
+		etcd.put("foo", "bar", 4);
 		Map<String, String> map = etcd.get("foo", false);
 		map.clear();
 	}
@@ -120,7 +122,7 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 	
 	//A put request is always successful
 	public void testCreateSucceed() throws Exception {
-		etcd.put("foo", "bar", 5);
+		etcd.put("foo", "bar", 3);
 		//etcd.put("foo", "bar");
 		
 		Map<String, EventType> watchEvents = new HashMap<>();
@@ -128,8 +130,10 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 		Listener listener = Watch.listener(response -> {
 			for(WatchEvent event : response.getEvents()) {
 				EventType eventType = event.getEventType();
-				watchEvents.put("Event", eventType);//$NON-NLS-1$
-				watchEvents.notifyAll();
+				synchronized (watchEvents) {
+					watchEvents.put("Event", eventType);//$NON-NLS-1$
+					watchEvents.notifyAll();					
+				}
 			}
 		});
 		
@@ -138,26 +142,19 @@ public class DiscoveryTest extends AbstractDiscoveryTest {
 		//etcd.delete("foo");
 		//etcd.closeWatch();
 		
-		Boolean watchDone = false;
-		
-		while (!watchDone) {
-			try {
-				synchronized (watchEvents) {
-					watchEvents.wait(10);
+		try {
+			synchronized (watchEvents) {
+				if (watchEvents.isEmpty()) {
+					watchEvents.wait(20000);
 				}
-				if(watchEvents.isEmpty())
-					continue;
-				if(watchEvents.get("Event") == EventType.DELETE) { //$NON-NLS-1$
-					etcd.closeWatch("foo");
-					watchDone = true;
-					continue;
-				}
-			} catch (InterruptedException e) {
-				//logEtcdError("watchJob.run", "Unexpected exception in watch job", e); //$NON-NLS-1$ //$NON-NLS-2$
 			}
+			assertFalse(watchEvents.isEmpty());
+			if(watchEvents.get("Event") == EventType.DELETE) { //$NON-NLS-1$
+				etcd.closeWatch("foo");
+			}
+		} catch (InterruptedException e) {
+			//logEtcdError("watchJob.run", "Unexpected exception in watch job", e); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		etcd.close();
-		
 	}
 
 	public void testSerializeAndDeserializeServiceInfo() throws Exception {

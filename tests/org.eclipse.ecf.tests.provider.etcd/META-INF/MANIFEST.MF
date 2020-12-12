@@ -10,7 +10,8 @@ Require-Bundle: org.eclipse.ecf.tests.discovery;bundle-version="2.0.0",
  org.eclipse.ecf.discovery;bundle-version="5.0.0",
  org.junit;bundle-version="4.11.0",
  org.json;bundle-version="1.0.0",
- org.eclipse.ecf;bundle-version="3.4.0"
+ org.eclipse.ecf;bundle-version="3.4.0",
+ org.eclipse.ecf.provider.etcd
 Bundle-ActivationPolicy: lazy
 Import-Package: com.google.protobuf,
  io.etcd.jetcd,
