@@ -20,6 +20,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry excluding="org/eclipse/ecf/internal/provider/etcd/protocol/EtcdDeleteRequest.java|org/eclipse/ecf/internal/provider/etcd/protocol/EtcdGetRequest.java|org/eclipse/ecf/internal/provider/etcd/protocol/EtcdNode.java|org/eclipse/ecf/internal/provider/etcd/protocol/EtcdRequest.java|org/eclipse/ecf/internal/provider/etcd/protocol/EtcdSetRequest.java|org/eclipse/ecf/internal/provider/etcd/protocol/EtcdWatchRequest.java|org/eclipse/ecf/internal/provider/etcd/protocol/EtcdErrorResponse.java|org/eclipse/ecf/internal/provider/etcd/protocol/EtcdException.java|org/eclipse/ecf/internal/provider/etcd/protocol/EtcdProtocol.java|org/eclipse/ecf/internal/provider/etcd/protocol/EtcdResponse.java|org/eclipse/ecf/internal/provider/etcd/protocol/EtcdSuccessResponse.java" kind="src" path="src"/>
+	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

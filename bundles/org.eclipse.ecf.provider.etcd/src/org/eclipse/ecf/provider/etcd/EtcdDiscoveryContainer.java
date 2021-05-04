@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,6 +43,9 @@ import org.eclipse.ecf.discovery.identity.IServiceTypeID;
 import org.eclipse.ecf.internal.provider.etcd.DebugOptions;
 import org.eclipse.ecf.internal.provider.etcd.LogUtility;
 import org.eclipse.ecf.internal.provider.etcd.protocol.Etcd;
+import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdNode;
+import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdProtocol;
+import org.eclipse.ecf.internal.provider.etcd.protocol.EtcdSuccessResponse;
 import org.eclipse.ecf.provider.etcd.identity.EtcdNamespace;
 import org.eclipse.ecf.provider.etcd.identity.EtcdServiceID;
 import org.json.JSONException;
@@ -110,7 +114,7 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 	private String dirUrl;
 	private EtcdWatchJob watchJob;
 	private boolean watchDone;
-	//private int watchIndex;
+	private int watchIndex;
 
 	private EtcdTTLJob ttlJob;
 	
@@ -214,9 +218,9 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 		return EtcdDiscoveryContainerInstantiator.NAME;
 	}
 
-//	private String removeKeyPrefix(String key) {
-//		return key.substring(this.keyPrefix.length());
-//	}
+	private String removeKeyPrefix(String key) {
+		return key.substring(this.keyPrefix.length());
+	}
 
 	public void connect(ID aTargetID, IConnectContext connectContext) throws ContainerConnectException {
 		if (this.etcdTargetID != null)
@@ -431,11 +435,11 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 		}
 	}
 
-//	private void setNewEtcdIndex(EtcdNode node) {
-//		watchIndex = node.getModifiedIndex() + 1;
-//	}
+	private void setNewEtcdIndex(EtcdNode node) {
+		watchIndex = node.getModifiedIndex() + 1;
+	}
 
-	Map<String, EventType> watchEvents = new HashMap<>();
+	Map<String, WatchEvent> watchEvents = new HashMap<>();
 
 	public class EtcdWatchJob extends Job {
 
@@ -457,8 +461,8 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 
 			Listener listener = Watch.listener(response -> {
 				for(WatchEvent event : response.getEvents()) {
-					EventType eventType = event.getEventType();
-					watchEvents.put("Event", eventType);//$NON-NLS-1$
+//					EventType eventType = event.getEventType();
+					watchEvents.put("Event", event);//$NON-NLS-1$
 					watchEvents.notifyAll();
 				}
 			});
@@ -480,12 +484,38 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 					}
 					if(watchEvents.isEmpty())
 						continue;
-					if(watchEvents.get("Event") == EventType.DELETE) { //$NON-NLS-1$
+					
+					WatchEvent watchEvent = watchEvents.get("Event"); //$NON-NLS-1$
+					EtcdSuccessResponse response = new EtcdSuccessResponse(new String(watchEvent.getKeyValue().getValue().getBytes()), new HashMap<>());
+					
+					if(watchEvent.getEventType() == EventType.DELETE) {
 						etcd.closeWatch(keyPrefix);
 						watchDone = true;
 						continue;
 					}
-				} catch (InterruptedException e) {
+					
+					String action = response.getAction();
+					EtcdNode node = response.getNode();
+					if (node == null) {
+						logEtcdError("handleEtcdWatchResponse", "node in response cannot be null", //$NON-NLS-1$ //$NON-NLS-2$
+								new org.eclipse.ecf.internal.provider.etcd.protocol.EtcdException("node cannot be null")); //$NON-NLS-1$
+						continue;
+					}
+					String fullKey = node.getKey();
+					String noPrefix = removeKeyPrefix(fullKey);
+					if (action.equals(EtcdProtocol.ACTION_DELETE) && fullKey.endsWith(localSessionId)) {
+						watchDone = true;
+						continue;
+					} else if (fullKey.endsWith(localSessionId) || noPrefix.startsWith(localSessionId)) {
+						setNewEtcdIndex(node);
+						continue;
+					} else {
+						handleEtcdWatchResponse(action, node);
+						setNewEtcdIndex(node);
+					}
+					
+					handleEtcdWatchResponse(action, node);
+				} catch (InterruptedException | JSONException e) {
 					logEtcdError("watchJob.run", "Unexpected exception in watch job", e); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
@@ -543,28 +573,28 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 		}
 	}
 
-//	private EtcdServiceInfoKey parseServiceInfoKey(String fullKey) {
-//		fullKey = removeKeyPrefix(fullKey);
-//		// Now split into sessionKey/serviceInfoKey
-//		int slashIndex = fullKey.lastIndexOf('/');
-//		if (slashIndex < 0)
-//			return null;
-//		String sessionKey = fullKey.substring(0, slashIndex);
-//		String siKey = fullKey.substring(slashIndex + 1);
-//		// Check to make sure sessionKey has UUID syntax
-//		try {
-//			UUID.fromString(sessionKey);
-//		} catch (IllegalArgumentException e) {
-//			return null;
-//		}
-//		try {
-//			UUID.fromString(siKey);
-//		} catch (IllegalArgumentException e) {
-//			return null;
-//		}
-//		return new EtcdServiceInfoKey(sessionKey, siKey);
-//	}
-//
+	private EtcdServiceInfoKey parseServiceInfoKey(String fullKey) {
+		fullKey = removeKeyPrefix(fullKey);
+		// Now split into sessionKey/serviceInfoKey
+		int slashIndex = fullKey.lastIndexOf('/');
+		if (slashIndex < 0)
+			return null;
+		String sessionKey = fullKey.substring(0, slashIndex);
+		String siKey = fullKey.substring(slashIndex + 1);
+		// Check to make sure sessionKey has UUID syntax
+		try {
+			UUID.fromString(sessionKey);
+		} catch (IllegalArgumentException e) {
+			return null;
+		}
+		try {
+			UUID.fromString(siKey);
+		} catch (IllegalArgumentException e) {
+			return null;
+		}
+		return new EtcdServiceInfoKey(sessionKey, siKey);
+	}
+
 //	IStatus createErrorStatus(String message) {
 //		return new Status(IStatus.ERROR, Activator.PLUGIN_ID, message);
 //	}
@@ -573,148 +603,147 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 //		return new Status(IStatus.ERROR, Activator.PLUGIN_ID, message, t);
 //	}
 
-//	private void handleRemoveNode(EtcdNode node) {
-//		trace("handleRemoveNode", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
-//		EtcdServiceInfoKey key = parseServiceInfoKey(node.getKey());
-//		if (key != null) {
-//			EtcdServiceInfo si = null;
-//			synchronized (services) {
-//				si = services.remove(key);
-//			}
-//			if (si != null)
-//				fireServiceUndiscovered(key.getFullKey(), si);
-//
-//		} else
-//			logEtcdError("handleRemoveNode", "Could not get EtcdServiceInfoKey for node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
-//	}
-//
-//	private void handleRemoveSession(String sessionKey) {
-//		if (sessionKey != null) {
-//			Map<EtcdServiceInfoKey, EtcdServiceInfo> removed = new HashMap<EtcdServiceInfoKey, EtcdServiceInfo>();
-//			synchronized (services) {
-//				for (Iterator<EtcdServiceInfoKey> it = services.keySet().iterator(); it.hasNext();) {
-//					EtcdServiceInfoKey key = it.next();
-//					if (key.matchSessionId(sessionKey)) {
-//						EtcdServiceInfo esi = services.get(key);
-//						if (esi != null)
-//							removed.put(key, esi);
-//						it.remove();
-//					}
-//				}
-//			}
-//			for (EtcdServiceInfoKey key : removed.keySet())
-//				fireServiceUndiscovered(key.getFullKey(), removed.get(key));
-//		} else
-//			logEtcdError("handleRemoveDirectory", "Could not remove sessionKey=" + sessionKey); //$NON-NLS-1$ //$NON-NLS-2$
-//	}
+	private void handleRemoveNode(EtcdNode node) {
+		trace("handleRemoveNode", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
+		EtcdServiceInfoKey key = parseServiceInfoKey(node.getKey());
+		if (key != null) {
+			EtcdServiceInfo si = null;
+			synchronized (services) {
+				si = services.remove(key);
+			}
+			if (si != null)
+				fireServiceUndiscovered(key.getFullKey(), si);
 
-//	private void handleRemoveDirectory(EtcdNode node) {
-//		trace("handleRemoveDirectory", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
-//		handleRemoveSession(removeKeyPrefix(node.getKey()));
-//	}
+		} else
+			logEtcdError("handleRemoveNode", "Could not get EtcdServiceInfoKey for node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
+	}
 
-//	private void handleAddNode(EtcdNode node) {
-//		trace("handleAddNode", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
-//		EtcdServiceInfoKey siKey = parseServiceInfoKey(node.getKey());
-//		if (siKey != null) {
-//			EtcdServiceInfo si = null;
-//			try {
-//				si = EtcdServiceInfo.deserializeFromString(node.getValue());
-//				synchronized (services) {
-//					services.put(siKey, si);
-//				}
-//				fireServiceTypeDiscovered(si.getServiceID().getServiceTypeID());
-//				fireServiceDiscovered(siKey.getFullKey(), si);
-//			} catch (JSONException e) {
-//				logEtcdError("handleEtcdServiceInfoAdd", "Error deserializing nodeValue for node=" + node, //$NON-NLS-1$ //$NON-NLS-2$
-//						new EtcdException(e));
-//			}
-//		} else
-//			logEtcdError("handleAddNode", "Could not get key "); //$NON-NLS-1$ //$NON-NLS-2$
-//	}
+	private void handleRemoveSession(String sessionKey) {
+		if (sessionKey != null) {
+			Map<EtcdServiceInfoKey, EtcdServiceInfo> removed = new HashMap<EtcdServiceInfoKey, EtcdServiceInfo>();
+			synchronized (services) {
+				for (Iterator<EtcdServiceInfoKey> it = services.keySet().iterator(); it.hasNext();) {
+					EtcdServiceInfoKey key = it.next();
+					if (key.matchSessionId(sessionKey)) {
+						EtcdServiceInfo esi = services.get(key);
+						if (esi != null)
+							removed.put(key, esi);
+						it.remove();
+					}
+				}
+			}
+			for (EtcdServiceInfoKey key : removed.keySet())
+				fireServiceUndiscovered(key.getFullKey(), removed.get(key));
+		} else
+			logEtcdError("handleRemoveDirectory", "Could not remove sessionKey=" + sessionKey); //$NON-NLS-1$ //$NON-NLS-2$
+	}
 
-//	private void handleAddDirectory(EtcdNode node) {
-//		trace("handleAddDirectory", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
-//		EtcdNode[] entryNodes = node.getNodes();
-//		if (entryNodes != null)
-//			for (EtcdNode en : entryNodes)
-//				if (en.isDirectory())
-//					handleAddDirectory(en);
-//				else
-//					handleAddNode(en);
-//	}
+	private void handleRemoveDirectory(EtcdNode node) {
+		trace("handleRemoveDirectory", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
+		handleRemoveSession(removeKeyPrefix(node.getKey()));
+	}
 
-//	private void handleCreateAction(EtcdNode node) {
-//		trace("handleExpireAction", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
-//		handleNodeOrDirectory(node, true);
-//	}
-//
-//	private void handleDeleteAction(EtcdNode node) {
-//		trace("handleDeleteAction", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
-//		handleNodeOrDirectory(node, false);
-//	}
-//
-//	private void handleExpireAction(EtcdNode node) {
-//		trace("handleExpireAction", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
-//		EtcdServiceInfoKey key = parseServiceInfoKey(node.getKey());
-//		if (node.isDirectory() || key == null) {
-//			handleRemoveDirectory(node);
-//		} else {
-//			handleRemoveNode(node);
-//		}
-//	}
-//
-//	private void handleGetAction(EtcdNode node) {
-//		trace("handleGetAction", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
-//		handleNodeOrDirectory(node, true);
-//	}
-//
-//	private void handleKeyAction(EtcdNode node) {
-//		trace("handleKeyAction", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
-//	}
+	private void handleAddNode(EtcdNode node) {
+		trace("handleAddNode", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
+		EtcdServiceInfoKey siKey = parseServiceInfoKey(node.getKey());
+		if (siKey != null) {
+			EtcdServiceInfo si = null;
+			try {
+				si = EtcdServiceInfo.deserializeFromString(node.getValue());
+				synchronized (services) {
+					services.put(siKey, si);
+				}
+				fireServiceTypeDiscovered(si.getServiceID().getServiceTypeID());
+				fireServiceDiscovered(siKey.getFullKey(), si);
+			} catch (JSONException e) {
+				logEtcdError("handleEtcdServiceInfoAdd", "Error deserializing nodeValue for node=" + node, new org.eclipse.ecf.internal.provider.etcd.protocol.EtcdException(e)); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		} else
+			logEtcdError("handleAddNode", "Could not get key "); //$NON-NLS-1$ //$NON-NLS-2$
+	}
 
-//	private void handleNodeOrDirectory(EtcdNode node, boolean add) {
-//		if (node.isDirectory()) {
-//			if (add)
-//				handleAddDirectory(node);
-//			else
-//				handleRemoveDirectory(node);
-//		} else {
-//			if (add)
-//				handleAddNode(node);
-//			else
-//				handleRemoveNode(node);
-//		}
-//	}
+	private void handleAddDirectory(EtcdNode node) {
+		trace("handleAddDirectory", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
+		EtcdNode[] entryNodes = node.getNodes();
+		if (entryNodes != null)
+			for (EtcdNode en : entryNodes)
+				if (en.isDirectory())
+					handleAddDirectory(en);
+				else
+					handleAddNode(en);
+	}
 
-//	private void handleSetAction(EtcdNode node) {
-//		trace("handleSetAction", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
-//		handleNodeOrDirectory(node, true);
-//	}
-//
-//	private void handleUnexpectedAction(String action, EtcdNode node) {
-//		// trace("handleUnexpectedAction", "action="+action+",node=" + node);
-//		// //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-//	}
+	private void handleCreateAction(EtcdNode node) {
+		trace("handleExpireAction", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
+		handleNodeOrDirectory(node, true);
+	}
 
-//	private void handleEtcdWatchResponse(String action, EtcdNode node) {
-//		// trace("handleEtcdWatchResponse", "action=" + action + ",node=" + node);
-//		// //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-//		if (action.equals(EtcdProtocol.ACTION_CREATE))
-//			handleCreateAction(node);
-//		else if (action.equals(EtcdProtocol.ACTION_DELETE))
-//			handleDeleteAction(node);
-//		else if (action.equals(EtcdProtocol.ACTION_EXPIRE))
-//			handleExpireAction(node);
-//		else if (action.equals(EtcdProtocol.ACTION_GET))
-//			handleGetAction(node);
-//		else if (action.equals(EtcdProtocol.ACTION_KEY))
-//			handleKeyAction(node);
-//		else if (action.equals(EtcdProtocol.ACTION_SET))
-//			handleSetAction(node);
-//		else
-//			handleUnexpectedAction(action, node);
-//	}
+	private void handleDeleteAction(EtcdNode node) {
+		trace("handleDeleteAction", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
+		handleNodeOrDirectory(node, false);
+	}
+
+	private void handleExpireAction(EtcdNode node) {
+		trace("handleExpireAction", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
+		EtcdServiceInfoKey key = parseServiceInfoKey(node.getKey());
+		if (node.isDirectory() || key == null) {
+			handleRemoveDirectory(node);
+		} else {
+			handleRemoveNode(node);
+		}
+	}
+
+	private void handleGetAction(EtcdNode node) {
+		trace("handleGetAction", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
+		handleNodeOrDirectory(node, true);
+	}
+
+	private void handleKeyAction(EtcdNode node) {
+		trace("handleKeyAction", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	private void handleNodeOrDirectory(EtcdNode node, boolean add) {
+		if (node.isDirectory()) {
+			if (add)
+				handleAddDirectory(node);
+			else
+				handleRemoveDirectory(node);
+		} else {
+			if (add)
+				handleAddNode(node);
+			else
+				handleRemoveNode(node);
+		}
+	}
+
+	private void handleSetAction(EtcdNode node) {
+		trace("handleSetAction", "node=" + node); //$NON-NLS-1$ //$NON-NLS-2$
+		handleNodeOrDirectory(node, true);
+	}
+
+	private void handleUnexpectedAction(String action, EtcdNode node) {
+		// trace("handleUnexpectedAction", "action="+action+",node=" + node);
+		// //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	}
+
+	private void handleEtcdWatchResponse(String action, EtcdNode node) {
+		// trace("handleEtcdWatchResponse", "action=" + action + ",node=" + node);
+		// //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		if (action.equals(EtcdProtocol.ACTION_CREATE))
+			handleCreateAction(node);
+		else if (action.equals(EtcdProtocol.ACTION_DELETE))
+			handleDeleteAction(node);
+		else if (action.equals(EtcdProtocol.ACTION_EXPIRE))
+			handleExpireAction(node);
+		else if (action.equals(EtcdProtocol.ACTION_GET))
+			handleGetAction(node);
+		else if (action.equals(EtcdProtocol.ACTION_KEY))
+			handleKeyAction(node);
+		else if (action.equals(EtcdProtocol.ACTION_SET))
+			handleSetAction(node);
+		else
+			handleUnexpectedAction(action, node);
+	}
 
 	private void fireServiceUndiscovered(String key, IServiceInfo iinfo) {
 		trace("fireServiceUndiscovered", "key=" + key + ",serviceInfo=" + iinfo); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -738,9 +767,9 @@ public class EtcdDiscoveryContainer extends AbstractDiscoveryContainerAdapter {
 		LogUtility.logError(method, DebugOptions.EXCEPTIONS_THROWING, getClass(), message, e);
 	}
 
-//	private void logEtcdError(String method, String message) {
-//		logEtcdError(method, message, null);
-//	}
+	private void logEtcdError(String method, String message) {
+		logEtcdError(method, message, null);
+	}
 
 	private void logAndThrowEtcdError(String method, String message, EtcdException e) {
 		logEtcdError(method, message, e);

@@ -23,12 +23,10 @@ public class EtcdSuccessResponse extends EtcdResponse {
 	private final EtcdNode etcdNode;
 	private final EtcdNode previousNode;
 
-	public EtcdSuccessResponse(String json, Map<String, List<String>> headers)
-			throws JSONException {
+	public EtcdSuccessResponse(String json, Map<String, List<String>> headers) throws JSONException {
 		JSONObject jsonObject = new JSONObject(json);
 		this.action = jsonObject.getString(ACTION_KEY);
-		Assert.isNotNull(this.action,
-				"action field in response must not be null"); //$NON-NLS-1$
+		Assert.isNotNull(this.action, "action field in response must not be null"); //$NON-NLS-1$
 		this.etcdNode = new EtcdNode(jsonObject.getJSONObject(NODE_KEY));
 		JSONObject jobj = jsonObject.optJSONObject(PREVIOUSNODE_KEY);
 		this.previousNode = (jobj != null) ? new EtcdNode(jobj) : null;
